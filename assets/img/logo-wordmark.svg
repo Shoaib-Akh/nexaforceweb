@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 423 72" role="img" aria-labelledby="title desc">
+  <title id="title">NexaForce wordmark</title>
+  <desc id="desc">Transparent NexaForce wordmark with white letters on purple blocks.</desc>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="800" text-anchor="middle">
+    <g fill="#6C3FC5">
+      <rect x="0" y="6" width="43" height="60"/>
+      <rect x="47" y="6" width="43" height="60"/>
+      <rect x="94" y="6" width="43" height="60"/>
+      <rect x="141" y="6" width="43" height="60"/>
+      <rect x="188" y="6" width="43" height="60"/>
+      <rect x="235" y="6" width="43" height="60"/>
+      <rect x="282" y="6" width="43" height="60"/>
+      <rect x="329" y="6" width="43" height="60"/>
+      <rect x="376" y="6" width="43" height="60"/>
+    </g>
+    <g fill="#fff">
+      <text x="21.5" y="51">N</text>
+      <text x="68.5" y="51">E</text>
+      <text x="115.5" y="51">X</text>
+      <text x="162.5" y="51">A</text>
+      <text x="209.5" y="51">F</text>
+      <text x="256.5" y="51">O</text>
+      <text x="303.5" y="51">R</text>
+      <text x="350.5" y="51">C</text>
+      <text x="397.5" y="51">E</text>
+    </g>
+  </g>
+</svg>
