@@ -256,7 +256,6 @@ textarea {
 
 .hero-grid,
 .page-hero-grid {
-  display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.8fr);
   gap: 3rem;
   align-items: center;
@@ -2796,6 +2795,7 @@ details p {
 
 .expert-photo {
   display: block;
+  width: 100%;
   height: 360px;
   object-fit: cover;
   object-position: center top;
