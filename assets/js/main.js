@@ -43,13 +43,34 @@ filterButtons.forEach((button) => {
   });
 });
 
+const whatsappNumber = "923280399018";
+
 document.querySelectorAll(".contact-form").forEach((form) => {
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const note = form.querySelector(".form-note");
+    const formData = new FormData(form);
+    const name = String(formData.get("name") || "").trim();
+    const email = String(formData.get("email") || "").trim();
+    const phone = String(formData.get("phone") || "").trim();
+    const service = String(formData.get("service") || "").trim();
+    const message = String(formData.get("message") || "").trim();
+    const whatsappMessage = [
+      "New quote request from NexaForce website:",
+      "",
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Phone: ${phone || "Not provided"}`,
+      `Service: ${service}`,
+      "",
+      "Message:",
+      message,
+    ].join("\n");
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+
     if (note) {
-      note.textContent = "Thanks. Your message is ready to connect to a form backend.";
+      note.textContent = "Opening WhatsApp with your message...";
     }
-    form.reset();
+    window.location.href = whatsappUrl;
   });
 });
