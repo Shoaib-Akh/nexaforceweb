@@ -695,6 +695,31 @@ display: grid;
   padding: 1.25rem;
 }
 
+.value-grid article {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.7rem;
+  align-items: center;
+}
+
+.value-grid .service-icon {
+  grid-column: 1;
+  grid-row: 1;
+  margin-bottom: 0;
+}
+
+.value-grid article h3 {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+}
+
+.value-grid article p {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: 0.75rem;
+}
+
 .summary-panel {
   padding: 1.4rem;
   position: sticky;
@@ -1110,6 +1135,42 @@ details p {
   padding: 74px 0;
 }
 
+.portfolio-hero {
+  background: #6C3FC5;
+  color: #fff;
+  border-bottom: none;
+}
+
+.portfolio-hero .eyebrow {
+  color: #ff8a00;
+}
+
+.portfolio-hero .eyebrow::before {
+  background: #ff8a00;
+}
+
+.portfolio-hero .page-hero-grid {
+  grid-template-columns: 1fr;
+  text-align: center;
+  justify-items: center;
+}
+
+.portfolio-hero .page-hero-grid > div {
+  max-width: 720px;
+}
+
+.portfolio-hero .page-hero-grid p {
+  color: #fff;
+}
+
+.portfolio-hero h1 .accent-text {
+  color: #ff8a00;
+}
+
+.portfolio-hero .hero-actions {
+  justify-content: center;
+}
+
 .page-hero h1 {
   font-size: 3.15rem;
 }
@@ -1217,6 +1278,10 @@ details p {
 
 .value-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.value-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .check-list {
@@ -1402,6 +1467,12 @@ details p {
   overflow: hidden;
 }
 
+a.project-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
 .project-card > div:last-child {
   padding: 1.2rem;
 }
@@ -1414,6 +1485,13 @@ details p {
   min-height: 230px;
   border: 0;
   border-radius: 0;
+}
+
+.project-image.preview-shot {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
 }
 
 .placeholder-b {
@@ -2098,6 +2176,28 @@ details p {
 .cta-strip .contact-info-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 0;
+}
+
+.cta-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.cta-inner .eyebrow {
+  justify-content: center;
+}
+
+.cta-inner .contact-info-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.cta-inner .btn {
+  margin-top: 0.5rem;
 }
 
 .cta-contact-row .btn {
@@ -2903,6 +3003,11 @@ details p {
   font-size: 0.72rem;
   font-weight: 900;
   box-shadow: 0 10px 26px rgba(20, 17, 31, 0.18);
+}
+
+.expert-social a svg {
+  width: 16px;
+  height: 16px;
 }
 
 .expert-info {
