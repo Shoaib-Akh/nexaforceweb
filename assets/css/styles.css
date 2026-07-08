@@ -320,7 +320,7 @@ textarea {
 .hero-grid{
 display: grid;
   gap: 2rem;
-  align-items: center;
+  align-items: center
 }
 .hero-visual {
   min-height: 470px;
