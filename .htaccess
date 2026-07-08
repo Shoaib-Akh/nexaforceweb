@@ -2,10 +2,16 @@ DirectorySlash Off
 RewriteEngine On
 
 RewriteRule ^about/?$ /about-us [R=301,L]
+RewriteRule ^about\.html$ /about-us [R=301,L]
 RewriteRule ^services/?$ /our-services [R=301,L]
+RewriteRule ^services\.html$ /our-services [R=301,L]
 RewriteRule ^team/?$ /our-teams [R=301,L]
+RewriteRule ^team\.html$ /our-teams [R=301,L]
 RewriteRule ^vision/?$ /our-vission [R=301,L]
+RewriteRule ^vision\.html$ /our-vission [R=301,L]
 RewriteRule ^contact/?$ /contact-us [R=301,L]
+RewriteRule ^contact\.html$ /contact-us [R=301,L]
+RewriteRule ^portfolio\.html$ /portfolio/ [R=301,L]
 
 RewriteCond %{THE_REQUEST} \s/+((about-us|our-services|our-teams|our-vission|contact-us))/[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
