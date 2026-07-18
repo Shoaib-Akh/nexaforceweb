@@ -638,7 +638,7 @@ display: grid;
   flex-direction: column;
 }
 
-.service-icon {
+.highlight-badge {
   display: inline-grid;
   place-items: center;
   width: 42px;
@@ -649,7 +649,7 @@ display: grid;
   margin-bottom: 0.75rem;
 }
 
-.service-icon svg {
+.highlight-badge svg {
   width: 22px;
   height: 22px;
   stroke: currentColor;
@@ -662,7 +662,7 @@ display: grid;
   align-items: center;
 }
 
-.service-grid .service-icon {
+.service-grid .highlight-badge {
   grid-column: 1;
   grid-row: 1;
   margin-bottom: 0;
@@ -687,7 +687,7 @@ display: grid;
   align-items: center;
 }
 
-.home .service-icon {
+.home .highlight-badge {
   grid-column: 1;
   grid-row: 1;
   margin-bottom: 0;
@@ -810,6 +810,50 @@ display: grid;
   align-items: start;
 }
 
+#about {
+  background: linear-gradient(rgba(20, 17, 31, 0.75), rgba(20, 17, 31, 0.75)), url("../img/about-us-maxsoft.jpg.webp") center/cover no-repeat;
+  color: #fff;
+}
+
+#about .why-grid {
+  grid-template-columns: 1fr;
+  text-align: center;
+  gap: 1rem;
+}
+
+#about .about-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+#about .eyebrow,
+#about h2,
+#about .section-intro,
+#about .about-cta {
+  color: #fff;
+}
+
+#about .section-intro {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+#about .creative-btn.primary-fill {
+  background: #fff;
+  color: var(--primary);
+  border-color: #fff;
+}
+
+#about .creative-btn.primary-fill:hover {
+  background: var(--warm-soft);
+  color: var(--warm-dark);
+  border-color: var(--warm);
+}
+
 .reason-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 2rem;
@@ -828,7 +872,7 @@ display: grid;
   align-items: center;
 }
 
-.value-grid .service-icon {
+.value-grid .highlight-badge {
   grid-column: 1;
   grid-row: 1;
   margin-bottom: 0;
@@ -1907,6 +1951,10 @@ a.project-card {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  #about .why-grid {
+    gap: 1.25rem;
+  }
 }
 
 /* ===================================
@@ -2482,8 +2530,8 @@ a.project-card {
 }
 
 .milestone-grid {
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
@@ -2901,6 +2949,16 @@ a.project-card {
   .feature-boxes,
   .stats-grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .newsletter-links-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-info-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-x: visible;
   }
 }
 
