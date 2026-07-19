@@ -77,32 +77,36 @@
       </section>
           <form class="contact-form large-form" id="quote-form" action="#" method="post">
             <h2>Get a Free Quote</h2>
-            <label>
-              Name
-              <input type="text" name="name" autocomplete="name" required>
-            </label>
-            <label>
-              Email
-              <input type="email" name="email" autocomplete="email" required>
-            </label>
-            <label>
-              Phone
-              <input type="tel" name="phone" autocomplete="tel">
-            </label>
-            <label>
-              Service
-              <select name="service" required>
-                <option value="">Select service</option>
-                <option>Web Development</option>
-                <option>SEO</option>
-                <option>Content Writing</option>
-                <option>App Development</option>
-                <option>SaaS Development</option>
-                <option>Digital Marketing</option>
-                <option>Meta Ads</option>
-                <option>Google Ads</option>
-              </select>
-            </label>
+            <div class="form-row">
+              <label>
+                Name
+                <input type="text" name="name" autocomplete="name" required>
+              </label>
+              <label>
+                Email
+                <input type="email" name="email" autocomplete="email" required>
+              </label>
+            </div>
+            <div class="form-row">
+              <label>
+                Phone
+                <input type="tel" name="phone" autocomplete="tel">
+              </label>
+              <label>
+                Service
+                <select name="service" required>
+                  <option value="">Select service</option>
+                  <option>Web Development</option>
+                  <option>SEO</option>
+                  <option>Content Writing</option>
+                  <option>App Development</option>
+                  <option>SaaS Development</option>
+                  <option>Digital Marketing</option>
+                  <option>Meta Ads</option>
+                  <option>Google Ads</option>
+                </select>
+              </label>
+            </div>
             <label>
               Message
               <textarea name="message" rows="6" required></textarea>
@@ -124,6 +128,7 @@
       </div>
       <div class="container footer-bottom"><span>Copyright 2026 NexaForce. All rights reserved.</span></div>
     </footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../assets/js/main.js"></script>
   </body>
 </html>

@@ -100,11 +100,16 @@
                   <span class="role-meta">Remote / On-site · 3 months</span>
                   <p>Support SEO, content and social campaigns with hands-on growth experiments.</p>
                 </li>
+                <li>
+                  <span class="role-title">SEO Specialist Intern</span>
+                  <span class="role-meta">Remote / On-site · 3 months</span>
+                  <p>Learn and execute search engine optimization strategies, conduct keyword research, and optimize website content.</p>
+                </li>
               </ul>
               <p class="role-note">Pick the internship role in the form and upload your CV to apply.</p>
             </div>
           </div>
-          <form class="contact-form large-form careers-form internship-form" id="internship-apply-form" action="#" method="post" enctype="multipart/form-data">
+          <form class="contact-form large-form careers-form internship-form" id="internship-apply-form" action="#" method="post" enctype="multipart/form-data" onsubmit="return window.handleFormSubmit ? window.handleFormSubmit(this, event) : (event.preventDefault(), false);">
             <h2>Internship Application</h2>
             <label>
               Full Name
@@ -126,6 +131,7 @@
                 <option>App Development Intern</option>
                 <option>UI / UX Design Intern</option>
                 <option>Digital Marketing Intern</option>
+                <option>SEO Specialist Intern</option>
               </select>
             </label>
             <label>
@@ -147,10 +153,15 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true" class="file-icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 <span class="file-text">Click to choose your CV file</span>
                 <span class="file-hint">PDF, DOC or DOCX up to 5MB</span>
-                <input type="file" id="intern-cv" name="cv" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+                <input type="file" id="intern-cv" name="cv_file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
               </label>
               <p class="file-name" aria-live="polite"></p>
             </div>
+            <div class="or-separator" style="text-align: center; margin: 0.5rem 0; font-weight: bold; color: var(--muted); font-size: 0.9rem;">— OR —</div>
+            <label>
+              Paste CV Link (Google Drive, Dropbox, OneDrive, etc.)
+              <input type="url" name="cv_link" placeholder="https://example.com/my-cv">
+            </label>
             <button class="btn btn-primary btn-block" type="submit">Submit Internship Application</button>
             <p class="form-note" aria-live="polite"></p>
           </form>
@@ -171,7 +182,7 @@
               <li>We typically respond within a few business days.</li>
             </ul>
           </div>
-          <form class="contact-form large-form careers-form" id="careers-form" action="#" method="post" enctype="multipart/form-data">
+          <form class="contact-form large-form careers-form" id="careers-form" action="#" method="post" enctype="multipart/form-data" onsubmit="return window.handleFormSubmit ? window.handleFormSubmit(this, event) : (event.preventDefault(), false);">
             <h2>Apply at NexaForce</h2>
             <label>
               Full Name
@@ -209,10 +220,15 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true" class="file-icon"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 <span class="file-text">Click to choose your CV file</span>
                 <span class="file-hint">PDF, DOC or DOCX up to 5MB</span>
-                <input type="file" id="cv" name="cv" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+                <input type="file" id="cv" name="cv_file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
               </label>
               <p class="file-name" aria-live="polite"></p>
             </div>
+            <div class="or-separator" style="text-align: center; margin: 0.5rem 0; font-weight: bold; color: var(--muted); font-size: 0.9rem;">— OR —</div>
+            <label>
+              Paste CV Link (Google Drive, Dropbox, OneDrive, etc.)
+              <input type="url" name="cv_link" placeholder="https://example.com/my-cv">
+            </label>
             <button class="btn btn-primary btn-block" type="submit">Submit Application</button>
             <p class="form-note" aria-live="polite"></p>
           </form>
@@ -252,6 +268,7 @@
       </div>
       <div class="container footer-bottom"><span>Copyright 2026 NexaForce. All rights reserved.</span></div>
     </footer>
-    <script src="../assets/js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/main.js" defer></script>
   </body>
 </html>

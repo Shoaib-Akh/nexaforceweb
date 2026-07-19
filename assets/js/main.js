@@ -1,54 +1,227 @@
-const menuToggle = document.querySelector(".menu-toggle");
-const primaryNav = document.querySelector(".primary-nav");
+// Surface any uncaught error into the visible form note (so failures are never silent).
+window.addEventListener("error", (event) => {
+  const note = document.querySelector(".contact-form .form-note");
+  if (note) {
+    note.textContent = "Error: " + (event.message || "script failed to load");
+    note.classList.add("is-error");
+  }
+});
 
-if (menuToggle && primaryNav) {
-  menuToggle.addEventListener("click", () => {
-    const isOpen = primaryNav.classList.toggle("is-open");
-    menuToggle.setAttribute("aria-expanded", String(isOpen));
-  });
-
-  primaryNav.addEventListener("click", (event) => {
-    if (event.target instanceof HTMLAnchorElement) {
-      primaryNav.classList.remove("is-open");
-      menuToggle.setAttribute("aria-expanded", "false");
-    }
-  });
+function safeSetup(label, fn) {
+  try {
+    fn();
+  } catch (error) {
+    console.error(`[${label}]`, error);
+  }
 }
 
-const faqItems = document.querySelectorAll(".faq-list details");
+safeSetup("menu", () => {
+  const menuToggle = document.querySelector(".menu-toggle");
+  const primaryNav = document.querySelector(".primary-nav");
 
-faqItems.forEach((item) => {
-  item.addEventListener("toggle", () => {
-    if (!item.open) return;
-    faqItems.forEach((otherItem) => {
-      if (otherItem !== item) otherItem.removeAttribute("open");
+  if (menuToggle && primaryNav) {
+    menuToggle.addEventListener("click", () => {
+      const isOpen = primaryNav.classList.toggle("is-open");
+      menuToggle.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    primaryNav.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLAnchorElement) {
+        primaryNav.classList.remove("is-open");
+        menuToggle.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+});
+
+safeSetup("faq", () => {
+  const faqItems = document.querySelectorAll(".faq-list details");
+
+  faqItems.forEach((item) => {
+    item.addEventListener("toggle", () => {
+      if (!item.open) return;
+      faqItems.forEach((otherItem) => {
+        if (otherItem !== item) otherItem.removeAttribute("open");
+      });
     });
   });
 });
 
-const filterButtons = document.querySelectorAll(".filter-btn");
-const projectCards = document.querySelectorAll(".project-card");
+safeSetup("filters", () => {
+  const filterButtons = document.querySelectorAll(".filter-btn");
+  const projectCards = document.querySelectorAll(".project-card");
 
-filterButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    const filter = button.dataset.filter || "all";
+  filterButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const filter = button.dataset.filter || "all";
 
-    filterButtons.forEach((item) => item.classList.remove("active"));
-    button.classList.add("active");
+      filterButtons.forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
 
-    projectCards.forEach((card) => {
-      const shouldShow = filter === "all" || card.dataset.category === filter;
-      card.hidden = !shouldShow;
+      projectCards.forEach((card) => {
+        const shouldShow = filter === "all" || card.dataset.category === filter;
+        card.hidden = !shouldShow;
+      });
     });
   });
 });
 
 const whatsappNumber = "923280399018";
 
-document.querySelectorAll(".contact-form").forEach((form) => {
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const note = form.querySelector(".form-note");
+// Paste your Supabase project credentials here
+const supabaseUrl = "https://ysgcmtpmsezvdkbuwapj.supabase.co"; // Example: "https://xyz.supabase.co"
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZ2NtdHBtc2V6dmRrYnV3YXBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NDg1MjgsImV4cCI6MjEwMDAyNDUyOH0.3ZwmNOhhyxT75SwKpTH-AhAbngkY26mNxtsb9jpkdqA"; // Example: "eyJhbGciOi..."
+
+// Initialize Supabase Client if credentials are provided
+let supabase = null;
+if (typeof window.supabase !== "undefined" && supabaseUrl && supabaseAnonKey) {
+  try {
+    supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  } catch (error) {
+    console.error("Supabase initialization error:", error);
+  }
+}
+
+// Upload file to Supabase Storage
+async function uploadCVToSupabase(file) {
+  if (!supabase) throw new Error("Supabase is not initialized.");
+
+  // Create a unique filename to prevent overwrite conflicts
+  const fileExt = file.name.split(".").pop();
+  const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+
+  const { data, error } = await supabase.storage
+    .from("cvs")
+    .upload(uniqueName, file, {
+      cacheControl: "3600",
+      upsert: false
+    });
+
+  if (error) throw error;
+
+  // Retrieve public download URL
+  const { data: urlData } = supabase.storage
+    .from("cvs")
+    .getPublicUrl(uniqueName);
+
+  if (!urlData || !urlData.publicUrl) {
+    throw new Error("Failed to resolve public URL.");
+  }
+
+  return urlData.publicUrl;
+}
+
+// Save application record to Supabase Database
+async function saveApplicationToSupabase(type, details) {
+  if (!supabase) throw new Error("Supabase is not initialized.");
+
+  const { data, error } = await supabase
+    .from("applications")
+    .insert([
+      {
+        type: type, // 'internship' or 'job'
+        name: details.name,
+        email: details.email,
+        phone: details.phone || null,
+        role: details.role || null,
+        availability: details.availability || null,
+        message: details.message || null,
+        cv_file_name: details.cvFileName || null,
+        cv_url: details.cvUrl || null
+      }
+    ])
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// Save quote request to Supabase Database
+async function saveQuoteToSupabase(details) {
+  if (!supabase) throw new Error("Supabase is not initialized.");
+
+  const { data, error } = await supabase
+    .from("quotes")
+    .insert([
+      {
+        name: details.name,
+        email: details.email,
+        phone: details.phone || null,
+        service: details.service,
+        message: details.message
+      }
+    ]);
+
+  if (error) throw error;
+  return data;
+}
+
+// Fallback file uploader
+async function uploadCVFileFallback(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  // Try tmpfiles.org first
+  try {
+    const response = await fetch("https://tmpfiles.org/api/v1/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (response.ok) {
+      const json = await response.json();
+      if (json.status === "success" && json.data && json.data.url) {
+        return json.data.url.replace("https://tmpfiles.org/", "https://tmpfiles.org/dl/");
+      }
+    }
+  } catch (error) {
+    console.error("tmpfiles fallback upload error:", error);
+  }
+
+  // Fallback to file.io
+  try {
+    const response = await fetch("https://file.io", {
+      method: "POST",
+      body: formData,
+    });
+    if (response.ok) {
+      const json = await response.json();
+      if (json.success && json.link) {
+        return json.link;
+      }
+    }
+  } catch (error) {
+    console.error("file.io fallback upload error:", error);
+  }
+
+  return null;
+}
+
+function setNote(note, text, isError = false) {
+  if (!note) return;
+  note.textContent = text;
+  note.classList.toggle("is-error", isError);
+  note.classList.toggle("is-success", !isError && Boolean(text));
+}
+
+function openWhatsApp(url) {
+  // Open chat in a new tab so the user keeps the page and sees confirmation.
+  const w = window.open(url, "_blank", "noopener,noreferrer");
+  if (!w) {
+    // Popup blocked: fall back to same-tab navigation.
+    window.location.href = url;
+  }
+}
+
+function buildWhatsAppText(lines) {
+  return encodeURIComponent(lines.filter(Boolean).join("\n"));
+}
+
+async function handleFormSubmit(form, event) {
+  if (event && event.preventDefault) event.preventDefault();
+  const note = form.querySelector(".form-note");
+  form.classList.remove("has-error");
+
     const formData = new FormData(form);
     const name = String(formData.get("name") || "").trim();
     const email = String(formData.get("email") || "").trim();
@@ -57,67 +230,167 @@ document.querySelectorAll(".contact-form").forEach((form) => {
     const role = String(formData.get("role") || "").trim();
     const availability = String(formData.get("availability") || "").trim();
     const message = String(formData.get("message") || "").trim();
-    const fileInput = form.querySelector('input[type="file"]');
-    const cvFile = fileInput && fileInput.files ? fileInput.files[0] : null;
+    const cvFileInput = form.querySelector('[name="cv_file"]');
+    const cvFile = cvFileInput && cvFileInput.files ? cvFileInput.files[0] : null;
+    const cvUrlInput = form.querySelector('[name="cv_link"]');
+    const cvUrl = cvUrlInput ? String(cvUrlInput.value || "").trim() : "";
 
+    const isCareers = form.classList.contains("careers-form");
+    const isInternship = form.classList.contains("internship-form");
+
+    // Basic validation
     if (!name || !email) {
-      if (note) note.textContent = "Please fill in your name and email.";
+      form.classList.add("has-error");
+      setNote(note, "Please fill in your name and a valid email.", true);
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      form.classList.add("has-error");
+      setNote(note, "Please enter a valid email address.", true);
+      return;
+    }
+    if (isCareers && !role) {
+      form.classList.add("has-error");
+      setNote(note, "Please select the role you are applying for.", true);
+      return;
+    }
+    if (isCareers && !cvFile && !cvUrl) {
+      form.classList.add("has-error");
+      setNote(note, "Please upload your CV file OR paste a link to your CV.", true);
       return;
     }
 
-    if (fileInput && fileInput.required && !cvFile) {
-      if (note) note.textContent = "Please attach your CV before submitting.";
-      return;
-    }
+    let cvLink = null;
+    let cvFileName = null;
+    let cvAttachmentLine = "CV: Not provided";
 
-    const cvName = cvFile ? cvFile.name : "Not attached";
-
-    if (form.classList.contains("careers-form")) {
-      const isInternship = form.classList.contains("internship-form");
-      const whatsappMessage = [
-        isInternship
-          ? "New internship application from NexaForce careers page:"
-          : "New job application from NexaForce careers page:",
-        "",
-        `Name: ${name}`,
-        `Email: ${email}`,
-        `Phone: ${phone || "Not provided"}`,
-        `Role: ${role || "Not specified"}`,
-        isInternship ? `Availability: ${availability || "Not specified"}` : null,
-        `CV: ${cvName}`,
-        "",
-        "Message:",
-        message || "No message provided.",
-      ].filter(Boolean).join("\n");
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
-
-      if (note) {
-        note.textContent = "Opening WhatsApp with your application...";
+    // Handle CV file upload if present
+    if (cvFile) {
+      cvFileName = cvFile.name;
+      setNote(note, "Uploading your CV... Please wait.");
+      try {
+        if (supabase) {
+          cvLink = await uploadCVToSupabase(cvFile);
+        } else {
+          cvLink = await uploadCVFileFallback(cvFile);
+        }
+        if (cvLink) {
+          cvAttachmentLine = `CV Link (Uploaded): ${cvLink}`;
+        } else {
+          cvAttachmentLine = `CV File: ${cvFile.name} (Upload failed)`;
+        }
+      } catch (uploadError) {
+        console.error("Upload error:", uploadError);
+        const errMsg = uploadError.message || uploadError;
+        cvAttachmentLine = `CV File: ${cvFile.name} (Upload failed: ${errMsg})`;
       }
-      window.location.href = whatsappUrl;
-      return;
     }
 
-    const whatsappMessage = [
-      "New quote request from NexaForce website:",
-      "",
-      `Name: ${name}`,
-      `Email: ${email}`,
-      `Phone: ${phone || "Not provided"}`,
-      `Service: ${service}`,
-      "",
-      "Message:",
-      message,
-    ].join("\n");
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
-
-    if (note) {
-      note.textContent = "Opening WhatsApp with your message...";
+    if (cvUrl) {
+      if (cvLink) {
+        cvAttachmentLine += `\nCV Link (Pasted): ${cvUrl}`;
+      } else {
+        cvLink = cvUrl;
+        cvAttachmentLine = `CV Link: ${cvUrl}`;
+      }
     }
-    window.location.href = whatsappUrl;
+
+    // Save data to Supabase Database if configured (only for careers/internships)
+    if (isCareers && supabase) {
+      try {
+        setNote(note, "Saving your application...");
+        await saveApplicationToSupabase(
+          isInternship ? "internship" : "job",
+          {
+            name,
+            email,
+            phone,
+            role,
+            availability,
+            message,
+            cvFileName,
+            cvUrl: cvLink || (cvUrl ? cvUrl : null)
+          }
+        );
+      } catch (dbError) {
+        console.error("Supabase Database error:", dbError);
+        const errMsg = dbError.message || dbError;
+        cvAttachmentLine += `\n(Database save failed: ${errMsg})`;
+      }
+    }
+
+    // Quote request (non-careers) also saved to DB when available
+    if (!isCareers && supabase) {
+      try {
+        setNote(note, "Saving your request...");
+        await saveQuoteToSupabase({ name, email, phone, service, message });
+      } catch (dbError) {
+        console.error("Supabase Database quote error:", dbError);
+      }
+    }
+
+    // Build WhatsApp message
+    const header = isCareers
+      ? (isInternship
+          ? "New internship application from NexaForce careers page:"
+          : "New job application from NexaForce careers page:")
+      : "New quote request from NexaForce website:";
+
+    const whatsappMessage = isCareers
+      ? [
+          header,
+          "",
+          `Name: ${name}`,
+          `Email: ${email}`,
+          `Phone: ${phone || "Not provided"}`,
+          `Role: ${role || "Not specified"}`,
+          isInternship ? `Availability: ${availability || "Not specified"}` : null,
+          cvAttachmentLine,
+          "",
+          "Message:",
+          message || "No message provided.",
+        ]
+      : [
+          header,
+          "",
+          `Name: ${name}`,
+          `Email: ${email}`,
+          `Phone: ${phone || "Not provided"}`,
+          `Service: ${service}`,
+          "",
+          "Message:",
+          message,
+        ];
+
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${buildWhatsAppText(whatsappMessage)}`;
+
+    setNote(note, "Done! Opening WhatsApp so you can send your application.");
+    openWhatsApp(whatsappUrl);
+
+    // Reset the form after a short confirmation delay.
+    setTimeout(() => {
+      form.reset();
+      const nameEl = form.querySelector(".file-name");
+      const textEl = form.querySelector(".file-text");
+      if (nameEl) nameEl.textContent = "";
+      if (textEl) textEl.textContent = "Click to choose your CV file";
+      setNote(note, "");
+    }, 2500);
+}
+
+// Expose for inline onsubmit fallback so the form never does a native "#" submit
+// even if this script fails to attach listeners.
+window.handleFormSubmit = handleFormSubmit;
+
+safeSetup("careers-forms", () => {
+  document.querySelectorAll(".contact-form").forEach((form) => {
+    form.addEventListener("submit", (event) => {
+      handleFormSubmit(form, event);
+    });
   });
 });
 
+safeSetup("careers-file", () => {
 document.querySelectorAll('.careers-form input[type="file"]').forEach((input) => {
   const form = input.closest("form");
   const nameEl = form.querySelector(".file-name");
@@ -156,4 +429,5 @@ document.querySelectorAll('.careers-form input[type="file"]').forEach((input) =>
     });
     dropEl.addEventListener("drop", () => updateName());
   }
+});
 });
