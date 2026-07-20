@@ -217,12 +217,10 @@ function setNote(note, text, isError = false) {
 }
 
 function openWhatsApp(url) {
-  // Open chat in a new tab so the user keeps the page and sees confirmation.
-  const w = window.open(url, "_blank", "noopener,noreferrer");
-  if (!w) {
-    // Popup blocked: fall back to same-tab navigation.
-    window.location.href = url;
-  }
+  // Try to open chat in a new tab.
+  // If the browser blocks the popup (due to async delay), the user can click
+  // the green "Open WhatsApp" button in the success message to open in a new tab.
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 function buildWhatsAppText(lines) {
