@@ -73,25 +73,30 @@ const whatsappDisplayNumber = "+92 3280399018";
 const supabaseUrl = "https://ysgcmtpmsezvdkbuwapj.supabase.co"; // Example: "https://xyz.supabase.co"
 const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZ2NtdHBtc2V6dmRrYnV3YXBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NDg1MjgsImV4cCI6MjEwMDAyNDUyOH0.3ZwmNOhhyxT75SwKpTH-AhAbngkY26mNxtsb9jpkdqA"; // Example: "eyJhbGciOi..."
 
-// Initialize Supabase Client if credentials are provided
-let supabase = null;
-if (typeof window.supabase !== "undefined" && supabaseUrl && supabaseAnonKey) {
-  try {
-    supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-  } catch (error) {
-    console.error("Supabase initialization error:", error);
+// Initialize Supabase Client dynamically on submit or check
+let supabaseClient = null;
+function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  if (typeof window.supabase !== "undefined" && supabaseUrl && supabaseAnonKey) {
+    try {
+      supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    } catch (error) {
+      console.error("Supabase initialization error:", error);
+    }
   }
+  return supabaseClient;
 }
 
 // Upload file to Supabase Storage
 async function uploadCVToSupabase(file) {
-  if (!supabase) throw new Error("Supabase is not initialized.");
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not initialized.");
 
   // Create a unique filename to prevent overwrite conflicts
   const fileExt = file.name.split(".").pop();
   const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
-  const { data, error } = await supabase.storage
+  const { data, error } = await client.storage
     .from("cvs")
     .upload(uniqueName, file, {
       cacheControl: "3600",
@@ -101,7 +106,7 @@ async function uploadCVToSupabase(file) {
   if (error) throw error;
 
   // Retrieve public download URL
-  const { data: urlData } = supabase.storage
+  const { data: urlData } = client.storage
     .from("cvs")
     .getPublicUrl(uniqueName);
 
@@ -114,9 +119,10 @@ async function uploadCVToSupabase(file) {
 
 // Save application record to Supabase Database
 async function saveApplicationToSupabase(type, details) {
-  if (!supabase) throw new Error("Supabase is not initialized.");
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not initialized.");
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("applications")
     .insert([
       {
@@ -140,9 +146,10 @@ async function saveApplicationToSupabase(type, details) {
 
 // Save quote request to Supabase Database
 async function saveQuoteToSupabase(details) {
-  if (!supabase) throw new Error("Supabase is not initialized.");
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not initialized.");
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("quotes")
     .insert([
       {
@@ -266,7 +273,7 @@ async function handleFormSubmit(form, event) {
     cvFileName = cvFile.name;
     setNote(note, "Uploading your CV... Please wait.");
     try {
-      if (supabase) {
+      if (getSupabaseClient()) {
         cvLink = await uploadCVToSupabase(cvFile);
       } else {
         cvLink = await uploadCVFileFallback(cvFile);
@@ -277,7 +284,8 @@ async function handleFormSubmit(form, event) {
     }
   }
 
-  if (isCareers && supabase) {
+  const client = getSupabaseClient();
+  if (isCareers && client) {
     try {
       setNote(note, "Saving your application...");
       await saveApplicationToSupabase(
@@ -298,7 +306,7 @@ async function handleFormSubmit(form, event) {
     }
   }
 
-  if (!isCareers && supabase) {
+  if (!isCareers && client) {
     try {
       await saveQuoteToSupabase({ name, email, phone, service, message });
     } catch (dbError) {
