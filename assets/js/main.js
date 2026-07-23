@@ -149,14 +149,35 @@ async function saveQuoteToSupabase(details) {
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not initialized.");
 
+  try {
+    const { data, error } = await client
+      .from("quotes")
+      .insert([
+        {
+          name: details.name,
+          email: details.email,
+          phone: details.phone || null,
+          service: details.service,
+          message: details.message
+        }
+      ]);
+
+    if (!error) return data;
+    console.warn("Primary quotes table insert error, falling back to applications table:", error);
+  } catch (err) {
+    console.warn("Primary quotes table insert exception, falling back to applications table:", err);
+  }
+
+  // Fallback: save to existing applications table
   const { data, error } = await client
-    .from("quotes")
+    .from("applications")
     .insert([
       {
+        type: "job",
         name: details.name,
         email: details.email,
         phone: details.phone || null,
-        service: details.service,
+        role: `Quote: ${details.service}`,
         message: details.message
       }
     ]);
@@ -229,122 +250,149 @@ function buildWhatsAppText(lines) {
 
 async function handleFormSubmit(form, event) {
   if (event && event.preventDefault) event.preventDefault();
-  const note = form.querySelector(".form-note");
-  form.classList.remove("has-error");
 
-  const formData = new FormData(form);
-  const name = String(formData.get("name") || "").trim();
-  const email = String(formData.get("email") || "").trim();
-  const phone = String(formData.get("phone") || "").trim();
-  const service = String(formData.get("service") || "").trim();
-  const role = String(formData.get("role") || "").trim();
-  const availability = String(formData.get("availability") || "").trim();
-  const message = String(formData.get("message") || "").trim();
-  const cvFileInput = form.querySelector('[name="cv_file"]');
-  const cvFile = cvFileInput && cvFileInput.files ? cvFileInput.files[0] : null;
-  const cvUrlInput = form.querySelector('[name="cv_link"]');
-  const cvUrl = cvUrlInput ? String(cvUrlInput.value || "").trim() : "";
+  // Prevent duplicate submissions if user clicks twice or multiple submit listeners fire
+  if (form.dataset.submitting === "true") return;
+  form.dataset.submitting = "true";
 
-  const isCareers = form.classList.contains("careers-form");
-  const isInternship = form.classList.contains("internship-form");
-
-  if (!name || !email) {
-    form.classList.add("has-error");
-    setNote(note, "Please fill in your name and a valid email.", true);
-    return;
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    form.classList.add("has-error");
-    setNote(note, "Please enter a valid email address.", true);
-    return;
-  }
-  if (isCareers && !role) {
-    form.classList.add("has-error");
-    setNote(note, "Please select the role you are applying for.", true);
-    return;
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const origBtnText = submitBtn ? submitBtn.textContent : "";
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Sending...";
   }
 
-  let cvLink = cvUrl || null;
-  let cvFileName = cvFile ? cvFile.name : null;
+  try {
+    const note = form.querySelector(".form-note");
+    form.classList.remove("has-error");
 
-  if (cvFile) {
-    cvFileName = cvFile.name;
-    setNote(note, "Uploading your CV... Please wait.");
-    try {
-      if (getSupabaseClient()) {
-        cvLink = await uploadCVToSupabase(cvFile);
-      } else {
-        cvLink = await uploadCVFileFallback(cvFile);
-      }
-    } catch (uploadError) {
-      console.error("Upload error:", uploadError);
-      cvLink = null;
+    const formData = new FormData(form);
+    const name = String(formData.get("name") || "").trim();
+    const email = String(formData.get("email") || "").trim();
+    const phone = String(formData.get("phone") || "").trim();
+    const service = String(formData.get("service") || "").trim();
+    const role = String(formData.get("role") || "").trim();
+    const availability = String(formData.get("availability") || "").trim();
+    const message = String(formData.get("message") || "").trim();
+    const cvFileInput = form.querySelector('[name="cv_file"]');
+    const cvFile = cvFileInput && cvFileInput.files ? cvFileInput.files[0] : null;
+    const cvUrlInput = form.querySelector('[name="cv_link"]');
+    const cvUrl = cvUrlInput ? String(cvUrlInput.value || "").trim() : "";
+
+    const isCareers = form.classList.contains("careers-form");
+    const isInternship = form.classList.contains("internship-form");
+
+    if (!name || !email) {
+      form.classList.add("has-error");
+      setNote(note, "Please fill in your name and a valid email.", true);
+      return;
     }
-  }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      form.classList.add("has-error");
+      setNote(note, "Please enter a valid email address.", true);
+      return;
+    }
+    if (isCareers && !role) {
+      form.classList.add("has-error");
+      setNote(note, "Please select the role you are applying for.", true);
+      return;
+    }
 
-  const client = getSupabaseClient();
-  if (isCareers && client) {
-    try {
-      setNote(note, "Saving your application...");
-      await saveApplicationToSupabase(
-        isInternship ? "internship" : "job",
-        {
-          name,
-          email,
-          phone,
-          role,
-          availability,
-          message,
-          cvFileName,
-          cvUrl: cvLink
+    let cvLink = cvUrl || null;
+    let cvFileName = cvFile ? cvFile.name : null;
+
+    if (cvFile) {
+      cvFileName = cvFile.name;
+      setNote(note, "Uploading your CV... Please wait.");
+      try {
+        if (getSupabaseClient()) {
+          cvLink = await uploadCVToSupabase(cvFile);
+        } else {
+          cvLink = await uploadCVFileFallback(cvFile);
         }
-      );
-    } catch (dbError) {
-      console.error("Supabase Database error:", dbError);
+      } catch (uploadError) {
+        console.error("Upload error:", uploadError);
+        cvLink = null;
+      }
     }
-  }
 
-  if (!isCareers && client) {
-    try {
-      await saveQuoteToSupabase({ name, email, phone, service, message });
-    } catch (dbError) {
-      console.error("Supabase Database quote error:", dbError);
+    const client = getSupabaseClient();
+    if (isCareers && client) {
+      try {
+        setNote(note, "Saving your application...");
+        await saveApplicationToSupabase(
+          isInternship ? "internship" : "job",
+          {
+            name,
+            email,
+            phone,
+            role,
+            availability,
+            message,
+            cvFileName,
+            cvUrl: cvLink
+          }
+        );
+      } catch (dbError) {
+        console.error("Supabase Database error:", dbError);
+      }
     }
+
+    if (!isCareers && client) {
+      try {
+        await saveQuoteToSupabase({ name, email, phone, service, message });
+      } catch (dbError) {
+        console.error("Supabase Database quote error:", dbError);
+      }
+    }
+
+    const header = isCareers
+      ? (isInternship
+          ? "New internship application from NexaForce careers page:"
+          : "New job application from NexaForce careers page:")
+      : "New quote request from NexaForce website:";
+
+    const lines = [
+      header,
+      "",
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Phone: ${phone || "Not provided"}`,
+      isCareers ? `Role: ${role || "Not specified"}` : `Service: ${service}`,
+      isInternship ? `Availability: ${availability || "Not specified"}` : null,
+      isCareers ? (cvLink ? `CV Link: ${cvLink}` : (cvFileName ? `CV File: ${cvFileName} (attached)` : "CV: Not provided")) : null,
+      "",
+      "Message:",
+      message || "No message provided."
+    ];
+
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${buildWhatsAppText(lines)}`;
+
+    const successText = isCareers
+      ? `Done! Your application has been saved. <a class="whatsapp-link" href="${whatsappUrl}" target="_blank" rel="noopener">Open WhatsApp (${whatsappDisplayNumber}) to send your CV & details</a>`
+      : `Done! Your quote request has been saved. <a class="whatsapp-link" href="${whatsappUrl}" target="_blank" rel="noopener">Open WhatsApp (${whatsappDisplayNumber}) to send your quote request</a>`;
+
+    setNote(note, successText, false);
+    openWhatsApp(whatsappUrl);
+
+    setTimeout(() => {
+      form.reset();
+      const nameEl = form.querySelector(".file-name");
+      const textEl = form.querySelector(".file-text");
+      if (nameEl) nameEl.textContent = "";
+      if (textEl) textEl.textContent = "Click to choose your CV file";
+      setNote(note, "");
+    }, 3000);
+
+  } finally {
+    setTimeout(() => {
+      form.dataset.submitting = "false";
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = origBtnText;
+      }
+    }, 1500);
   }
-
-  const header = isCareers
-    ? (isInternship
-        ? "New internship application from NexaForce careers page:"
-        : "New job application from NexaForce careers page:")
-    : "New quote request from NexaForce website:";
-
-  const lines = [
-    header,
-    "",
-    `Name: ${name}`,
-    `Email: ${email}`,
-    `Phone: ${phone || "Not provided"}`,
-    isCareers ? `Role: ${role || "Not specified"}` : `Service: ${service}`,
-    isInternship ? `Availability: ${availability || "Not specified"}` : null,
-    cvLink ? `CV Link: ${cvLink}` : (cvFileName ? `CV File: ${cvFileName} (attached)` : "CV: Not provided"),
-    "",
-    "Message:",
-    message || "No message provided."
-  ];
-
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${buildWhatsAppText(lines)}`;
-
-  setNote(note, `Done! Your application has been saved. <a class="whatsapp-link" href="${whatsappUrl}" target="_blank" rel="noopener">Open WhatsApp (${whatsappDisplayNumber}) to send your CV & details</a>`, false);
-  openWhatsApp(whatsappUrl);
-
-  setTimeout(() => {
-    form.reset();
-    const nameEl = form.querySelector(".file-name");
-    const textEl = form.querySelector(".file-text");
-    if (nameEl) nameEl.textContent = "";
-    if (textEl) textEl.textContent = "Click to choose your CV file";
-    setNote(note, "");
-  }, 3000);
 }
 
 // Expose for inline onsubmit fallback so the form never does a native "#" submit
